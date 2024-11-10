@@ -1,0 +1,119 @@
+@using System.Globalization
+@using tarea7 
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <button class="btn btn-secondary" @onclick="PreviousMonth">❮</button>
+        <h4>@currentMonth.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</h4>
+        <button class="btn btn-secondary" @onclick="NextMonth">❯</button>
+    </div>
+
+    <table class="calendar-table">
+        <thead>
+            <tr>
+                @foreach (var day in daysOfWeek)
+                {
+                    <th>@day</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var week in calendarData)
+{
+    <tr>
+        @foreach (var day in week)
+        {
+            <td class="@GetDayCssClass(day)">
+                @if (day != DateTime.MinValue)
+                {
+                    <span class="date-number">@day.Day</span>
+
+
+                    @if (GetDetentionCount(day) > 0)
+                    {
+                        <span class="detentions-count" title="Total Detenciones">@GetDetentionCount(day)</span>
+                    }
+                }
+            </td>
+        }
+    </tr>
+}
+
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public List<Detencion> Detenciones { get; set; } = new();
+
+    private DateTime currentMonth = DateTime.Now;
+    private List<List<DateTime>> calendarData = new();
+    private string[] daysOfWeek = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
+
+    protected override void OnInitialized()
+    {
+        GenerateCalendar();
+    }
+
+    private void GenerateCalendar()
+    {
+        calendarData.Clear();
+        DateTime firstDay = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        int daysInMonth = DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month);
+        int startDayOfWeek = (int)firstDay.DayOfWeek;
+        
+        List<DateTime> week = new List<DateTime>();
+        int dayCounter = 1;
+
+
+        for (int i = 0; i < startDayOfWeek; i++)
+        {
+            week.Add(DateTime.MinValue);
+        }
+
+        while (dayCounter <= daysInMonth)
+        {
+  
+            for (int i = startDayOfWeek; i < 7; i++)
+            {
+                if (dayCounter <= daysInMonth)
+                {
+                    week.Add(new DateTime(currentMonth.Year, currentMonth.Month, dayCounter));
+                    dayCounter++;
+                }
+                else
+                {
+                    week.Add(DateTime.MinValue); 
+                }
+            }
+
+            calendarData.Add(week);
+            week = new List<DateTime>();
+            startDayOfWeek = 0; 
+        }
+    }
+
+    private int GetDetentionCount(DateTime day)
+    {
+        return day != DateTime.MinValue ? Detenciones.Count(d => d.FechaDetencion.Date == day.Date) : 0;
+    }
+
+    private string GetDayCssClass(DateTime day)
+    {
+        return day == DateTime.MinValue ? "empty-day" : "filled-day";
+    }
+
+    private void PreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        GenerateCalendar();
+    }
+
+    private void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        GenerateCalendar();
+    }
+}

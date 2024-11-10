@@ -1,0 +1,65 @@
+body[b-ksz1dbbkub] {
+    font-family: Arial, sans-serif;
+    background-color: #f5f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.about-container[b-ksz1dbbkub] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.about-card[b-ksz1dbbkub] {
+    background-color: #ffffff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    max-width: 400px;
+    padding: 20px 30px;
+    text-align: center;
+}
+
+.about-card h2[b-ksz1dbbkub] {
+    font-size: 24px;
+    color: #333333;
+    margin-bottom: 15px;
+}
+
+.about-card p[b-ksz1dbbkub] {
+    font-size: 16px;
+    color: #666666;
+    margin: 8px 0;
+}
+
+.about-card strong[b-ksz1dbbkub] {
+    color: #333333;
+}
+
+.contact-section p[b-ksz1dbbkub] {
+    margin: 5px 0;
+}
+
+.contact-section p:first-of-type[b-ksz1dbbkub] {
+    margin-top: 15px;
+    font-weight: bold;
+    color: #444444;
+}
+
+.name[b-ksz1dbbkub] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.name-image p[b-ksz1dbbkub]{
+    width: 30px;  
+    height: 30px;  
+    margin-right: 10px; 
+    border-radius: 50%; 
+}
+

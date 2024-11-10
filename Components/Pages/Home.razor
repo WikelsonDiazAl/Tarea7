@@ -1,0 +1,189 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@page "/mantenimiento"
+@inject DetencionContexto Dc
+@using Microsoft.EntityFrameworkCore;
+@inject IJSRuntime JSx
+
+
+<h1>Mantenimiento</h1>
+
+@if (modo == Modo.Lista)
+{
+    <h3 class="text-center">Listado de mantenimiento</h3>
+
+    <div class="text-end mb-3">
+        <button class="btn btn-success" @onclick="()=>modo = Modo.Editar">Agregar detención</button>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Nombre</th>
+                <th>Pasaporte</th>
+                <th>Fecha de nacimiento</th>
+                <th>Coordenadas</th>
+                <th>Modificar</th>
+            </tr>
+        </thead>
+        <tbody>
+         @foreach (var Detencion in Detenciones)
+         {
+            <tr>
+                <td>@Detencion.FechaDetencion</td>
+                <td>@Detencion.Nombre @Detencion.Apellido</td>
+                <td>@Detencion.NumPasaporte</td>
+                <td>@Detencion.FechaDetencion</td>
+                <td>@Detencion.Coordenadas()</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Editar(Detencion)">Editar</button>
+                    <button class="btn btn-danger" @onclick="() => Eliminar(Detencion.IdDentencion)">Eliminar</button>
+                </td>
+            </tr>
+         }
+        </tbody>
+    </table>
+}
+else if (modo == Modo.Editar)
+{
+    <EditForm Model="detencion" OnValidSubmit="Guardar">
+        <ValidationSummary />
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label for="Nombre">Nombre:</label>
+            <InputText id="Nombre" class="form-control" @bind-Value="@detencion.Nombre" />
+        </div>
+
+        <div class="form-group">
+            <label for="Apellido">Apellido:</label>
+            <InputText id="Apellido" class="form-control" @bind-Value="@detencion.Apellido" />
+        </div>
+
+        <div class="form-group">
+            <label for="Pasaporte">Pasaporte:</label>
+            <InputText id="Pasaporte" class="form-control" @bind-Value="@detencion.NumPasaporte" />
+        </div>
+
+        <div class="form-group">
+            <label for="FechaNacimiento">Fecha de nacimiento:</label>
+            <InputDate id="FechaNacimiento" class="form-control" @bind-Value="@detencion.FechaNacimiento" />
+        </div>
+
+        <div class="form-group">
+            <label for="FechaDetencion">Fecha de detención:</label>
+            <InputDate id="FechaDetencion" class="form-control" @bind-Value="@detencion.FechaDetencion" />
+        </div>
+
+        <div class="form-group">
+            <label for="Longitud">Longitud:</label>
+            <InputNumber id="Longitud" class="form-control" @bind-Value="@detencion.Longitud" />
+        </div>
+
+        <div class="form-group">
+            <label for="Latitud">Latitud:</label>
+            <InputNumber id="Latitud" class="form-control" @bind-Value="@detencion.Latitud" />
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Volver">Volver</button>
+        </div>
+
+    </EditForm>
+}
+
+@code {
+    enum Modo
+    {
+        Lista,
+        Editar
+    }
+
+    Modo modo = Modo.Lista;
+
+    List<Detencion> Detenciones = new List<Detencion>();
+    Detencion detencion = new Detencion();
+
+    protected override void OnInitialized()
+    {
+        Detenciones = Dc.Detencion.ToList();
+    }
+
+    void Guardar()
+{
+    if (detencion.IdDentencion > 0)
+    {
+       
+        var existingDetencion = Dc.Detencion.Local.FirstOrDefault(d => d.IdDentencion == detencion.IdDentencion);
+        if (existingDetencion != null)
+        {
+            Dc.Entry(existingDetencion).State = EntityState.Detached;
+        }
+
+        
+        Dc.Detencion.Update(detencion);
+        Dc.SaveChanges();
+
+        var index = Detenciones.FindIndex(d => d.IdDentencion == detencion.IdDentencion);
+        Detenciones[index] = detencion;
+    }
+    else
+    {
+    
+        Dc.Detencion.Add(detencion);
+        Dc.SaveChanges();
+        Detenciones.Add(detencion);
+    }
+    modo = Modo.Lista;
+    StateHasChanged(); 
+}
+
+
+    void Editar(Detencion detencionSeleccionada)
+    {
+        
+        detencion = new Detencion
+        {
+            IdDentencion = detencionSeleccionada.IdDentencion,
+            Nombre = detencionSeleccionada.Nombre,
+            Apellido = detencionSeleccionada.Apellido,
+            NumPasaporte = detencionSeleccionada.NumPasaporte,
+            FechaNacimiento = detencionSeleccionada.FechaNacimiento,
+            FechaDetencion = detencionSeleccionada.FechaDetencion,
+            Latitud = detencionSeleccionada.Latitud,
+            Longitud = detencionSeleccionada.Longitud
+        };
+
+        modo = Modo.Editar;
+    }
+
+
+    private async Task Eliminar(int idDetencion)
+{
+    var detencionAEliminar = Dc.Detencion.FirstOrDefault(d => d.IdDentencion == idDetencion);
+    
+    if (detencionAEliminar != null)
+    {
+        
+        bool confirmado = await JSx.InvokeAsync<bool>("confirm", $"¿Estás seguro de que deseas eliminar la detención de '{detencionAEliminar.Nombre} {detencionAEliminar.Apellido}'?");
+        
+        if (confirmado)
+        {
+            
+            Dc.Detencion.Remove(detencionAEliminar);
+            await Dc.SaveChangesAsync();
+            Detenciones = Dc.Detencion.ToList(); 
+            StateHasChanged(); 
+        }
+    }
+}
+
+
+    void Volver()
+    {
+        
+        modo = Modo.Lista;
+    }
+}
